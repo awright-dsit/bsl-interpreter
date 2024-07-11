@@ -1,7 +1,3 @@
-# python-repo-template
-
-This is a generic repo for Python projects in the Advanced Analytics team. This is a living template that aims to stay up to date with the current best practice. Please do open issues for any problems or feature requests and create PRs if you have any changes you want to make. More details on the features contained in this repo can be found [here](https://beisgov.sharepoint.com/:p:/r/sites/AdvancedAnalytics-OS/Shared%20Documents/General/2024_March_AA_Coding_Standards.pptx?d=w89a55b524d874a0bb38dfc2e83694bd2&csf=1&web=1&e=zqnSt2).
-
 ## Installing repository requirements
 When using this repo, it is necessary to install some packages. As a default, this repo will require you to install pre-commit & ruff. It is likely that your code will fail automated pull review checks if you do not install these.
 
