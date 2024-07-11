@@ -1,0 +1,87 @@
+name: Auto Document
+on:
+  pull_request_review:
+    types: [submitted]
+    
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  discussions: write
+  pull-requests: write
+
+jobs:
+  update-docs:
+    name: update docs
+    if: github.event.review.state == 'APPROVED'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./doc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Set up Python3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install Sphinx
+        run: |
+          pip install sphinx
+          pip install sphinx-book-theme
+          pip install sphinx-togglebutton
+      - name: Clear and recreate docs
+        run: |
+          make clean
+          make html
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull
+          git add --force -A
+          git commit -m "Updated documentation"
+          git push
+  mark-stale-on-failure:
+    needs: update-docs
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+      - name: Get Pull Request Number
+        run: echo "PULL_NUMBER=$(echo "$GITHUB_REF" | awk -F / '{print $3}')" >> $GITHUB_ENV
+        shell: bash
+      - name: Dismiss all reviews
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: |
+          gh api repos/${{ github.repository }}/pulls/${{ env.PULL_NUMBER }}/reviews \
+          --jq '.[] | select(.state == "APPROVED") | .id' \
+          | xargs -I '{}' gh api --method=PUT -f message="Update docs failed to run." \
+          repos/${{ github.repository }}/pulls/${{ env.PULL_NUMBER }}/reviews/'{}'/dismissals
+  automerge:
+    needs: update-docs
+    if: github.event.review.state == 'APPROVED'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+      - name: Automerge PR
+        uses: pascalgn/automerge-action@v0.16.2
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          MERGE_LABELS: ""
+          MERGE_METHOD: "merge"
+          MERGE_COMMIT_MESSAGE: "pull-request-title"
+          MERGE_RETRIES: "6"
+          MERGE_RETRY_SLEEP: "10000"
+          UPDATE_METHOD: "rebase"

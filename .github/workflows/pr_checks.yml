@@ -1,0 +1,41 @@
+name: Pull Request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  flake8:
+    name: checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip' # caching pip dependencies
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest nbstripout
+
+      - name: Install and run ruff
+        run: |
+          python -m ruff format
+          python -m ruff check
+
+      - name: Pytests
+        run: |
+          pip install pytest nbstripout
+          pytest tests/
+
+      - name: Python Interrogate Check
+        uses: JackMcKew/python-interrogate-check@v0.1.2
+        with:
+          path: 'src/'
+          fail-under: '80'

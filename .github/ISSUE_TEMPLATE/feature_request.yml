@@ -1,0 +1,13 @@
+name: Feature Request
+description: You want to request a new feature or capability.
+title: "[Feature]: "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: What would you like the feature to achieve?
+      value: "Tell us what you want!"
+    validations:
+      required: true
