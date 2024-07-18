@@ -110,3 +110,7 @@ $RECYCLE.BIN/
 # Spyder project settings
 .spyderproject
 .spyproject
+
+## Directories
+# Images for models
+images/
